@@ -1,5 +1,5 @@
 import { Card, Stack, ProgressBar, Button } from "react-bootstrap"
-import React, { FC } from 'react'
+import { FC } from 'react'
 import { currencyFormatter } from '../utils/currencyFormatter'
 
 interface BudgetCardProps {
@@ -7,7 +7,7 @@ interface BudgetCardProps {
     amount: number,
     max: number,
     gray: boolean,
-    onAddExpenseClick: () => void,
+    onAddExpenseClick?: () => void,
     hideButton: boolean,
     onViewExpensesClick?: () => void,
 }

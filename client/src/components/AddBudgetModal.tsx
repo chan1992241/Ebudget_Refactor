@@ -24,11 +24,11 @@ export const AddBudgetModal: FC<AddBudgetModalProps> = ({ show, handleClose }) =
             <Modal.Body>
                 <Form.Group className="mb-3" controlId="name">
                     <Form.Label>Name</Form.Label>
-                    <Form.Control ref={nameRef} type="text" placeholder="Enter name" required />
+                    <Form.Control ref={nameRef} type="text" placeholder="Enter name" required name='name' />
                 </Form.Group>
                 <Form.Group className="mb-3" controlId="name">
                     <Form.Label>Maximum Spending</Form.Label>
-                    <Form.Control ref={maxRef} type="number" required min={0} step={0.01} />
+                    <Form.Control ref={maxRef} type="number" required min={0} step={0.01} name='maxSpending' />
                 </Form.Group>
                 <div className="d-flex justify-content-end">
                     <Button variant="primary" type="submit">Add</Button>

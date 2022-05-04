@@ -26,18 +26,19 @@ const AddExpenseModal: FC<AddNewBudgetProps> = ({ show, handleClose, defaulBudge
                 </Modal.Header>
                 <Modal.Body>
                     <Form.Group className="mb-3" controlId="description">
-                        <Form.Label>description</Form.Label>
-                        <Form.Control ref={descriptionRef} type="text" placeholder="Enter name" required />
+                        <Form.Label>Description</Form.Label>
+                        <Form.Control ref={descriptionRef} type="text" placeholder="Enter name" required name='name' />
                     </Form.Group>
                     <Form.Group className="mb-3" controlId="amount">
                         <Form.Label>Amount</Form.Label>
-                        <Form.Control ref={amountRef} type="number" required min={0} step={0.01} />
+                        <Form.Control ref={amountRef} type="number" required min={0} step={0.01} name="amount" />
                     </Form.Group>
                     <Form.Group className="mb-3" controlId="budgetId">
                         <Form.Label>Budget</Form.Label>
                         <Form.Select
                             defaultValue={defaulBudgetId}
                             ref={budgetIdRef}
+                            name="budgetID"
                         >
                             <option key={"no_key"} value={"no_val"}>No Value</option>
                             {/* TODO: add other option */}

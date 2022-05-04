@@ -32,15 +32,19 @@ class Expense(Base):
 Base.metadata.create_all(engine)
 
 
-###############################################################################
+# Insert Uncategorized Budget if not exists
 Session = sessionmaker(bind=engine)
 session = Session()
+
+isUncategorizedBudget = session.query(
+    Budget).filter(Budget.name == 'Uncategorized')
+
+if (isUncategorizedBudget.count() == 0):
+    budget = Budget(name='Uncategorized', maxSpending=0)
+    session.add(budget)
+    session.commit()
 
 result = session.query(Budget).all()
 
 for row in result:
     print(f'{row.id} {row.name} {row.maxSpending}')
-
-# uncategorized = Budget(name='Uncategorized', maxSpending=0)
-# session.add(uncategorized)
-# session.commit()

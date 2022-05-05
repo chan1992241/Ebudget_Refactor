@@ -1,4 +1,4 @@
-import React, { FC, useRef } from 'react'
+import React, { FC, useEffect, useRef } from 'react'
 import { Modal, Form, Button } from "react-bootstrap";
 
 interface AddBudgetModalProps {
@@ -9,11 +9,9 @@ interface AddBudgetModalProps {
 export const AddBudgetModal: FC<AddBudgetModalProps> = ({ show, handleClose }) => {
     const nameRef = useRef<any>();
     const maxRef = useRef<any>();
-    function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+    async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
         event.preventDefault();
-        /*
-            TODO: submit data to server
-        */
+        // useFetchAPI('http://127.0.0.1:5000/', "GET");
         handleClose();
     }
     return <Modal show={show} onHide={handleClose}>

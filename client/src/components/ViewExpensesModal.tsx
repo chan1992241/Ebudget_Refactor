@@ -3,7 +3,7 @@ import { currencyFormatter } from "../utils/currencyFormatter";
 import { FC } from "react";
 
 interface ViewExpensesModalProps {
-    budgetId: string | null,
+    budgetId: number | null,
     handleClose: () => void,
 }
 

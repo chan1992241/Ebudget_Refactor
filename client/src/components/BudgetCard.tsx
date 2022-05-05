@@ -5,8 +5,8 @@ import { currencyFormatter } from '../utils/currencyFormatter'
 interface BudgetCardProps {
     name: string,
     amount: number,
-    max: number,
-    gray: boolean,
+    max?: number,
+    gray?: boolean,
     onAddExpenseClick?: () => void,
     hideButton: boolean,
     onViewExpensesClick?: () => void,
@@ -21,10 +21,12 @@ function getProgressBarVariant(amount: number, max: number): string {
 
 export const BudgetCard: FC<BudgetCardProps> = ({ name, amount, max, gray, onAddExpenseClick, hideButton, onViewExpensesClick }) => {
     const classNames = [];
-    if (amount > max) {
-        classNames.push("bg-danger", "bg-opacity-10");
-    } else if (gray) {
-        classNames.push("bg-light");
+    if (max) {
+        if (amount > max) {
+            classNames.push("bg-danger", "bg-opacity-10");
+        } else if (gray) {
+            classNames.push("bg-light");
+        }
     }
     return (
         <Card className={classNames.join(" ")}>

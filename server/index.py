@@ -1,23 +1,31 @@
 from flask import Flask, redirect, url_for, request, jsonify
 from seeds.index import Budget, Expense
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
+from flask_cors import CORS
+from dotenv import load_dotenv
+import os
 # Connect to database
+load_dotenv()
 try:
     engine = create_engine(
-        'postgresql+psycopg2://postgres:jinyeeU@localhost/ebudget', echo=True)
+        os.getenv("postgres_uri"), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
 except Exception as e:
     print(e)
 
 app = Flask(__name__)
+CORS(app)
 
 
 @app.route('/show_budgets')
 def show_budgets():
-    result = session.query(Budget).all()
-    return jsonify({"data": [{'id': row.id, 'name': row.name, 'maxSpending': row.maxSpending} for row in result], "status": "success"})
+    sqlStatement = text(
+        "SELECT *, SUM(e.amount) FROM Expense e JOIN Budget b ON e.budget_id=b.id GROUP BY b.id, b.name, e.budget_id, e.id")
+    result = session.execute(
+        sqlStatement)
+    return jsonify({"data": [{'budget_id': row.budget_id, 'name': row.name, "maxSpending": row.maxSpending, "totalExpense": row.sum} for row in result], "status": "success"})
 
 
 @app.route('/show_expenses/<int:budgetID>')
@@ -30,12 +38,6 @@ def show_expenses(budgetID):
         return jsonify({"data": [{'id': row.id, 'name': row.name, 'amount': row.amount, 'budget_id': row.budget_id} for row in result], "status": "success"})
     except Exception as e:
         return jsonify({"data": [], "status": "error", "message": e})
-
-
-@app.route("/")
-def showAllExpenses():
-    result = session.query(Expense).all()
-    return jsonify({"data": [{'id': row.id, 'name': row.name, 'amount': row.amount, 'budget_id': row.budget_id} for row in result], "status": "success"})
 
 
 @app.route('/addBudget', methods=['POST'])

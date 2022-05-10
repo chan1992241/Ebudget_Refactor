@@ -22,10 +22,10 @@ CORS(app)
 @app.route('/show_budgets')
 def show_budgets():
     sqlStatement = text(
-        "SELECT *, SUM(e.amount) FROM Expense e JOIN Budget b ON e.budget_id=b.id GROUP BY b.id, b.name, e.budget_id, e.id")
+        "SELECT *, SUM(e.amount) FROM Expense e RIGHT JOIN Budget b ON e.budget_id=b.id GROUP BY b.id, b.name, e.budget_id, e.id")
     result = session.execute(
         sqlStatement)
-    return jsonify({"data": [{'budget_id': row.budget_id, 'name': row.name, "maxSpending": row.maxSpending, "totalExpense": row.sum} for row in result], "status": "success"})
+    return jsonify({"data": [{'budget_id': row.id, 'name': row.name, "maxSpending": row.maxSpending, "totalExpense": row.sum} for row in result], "status": "success"})
 
 
 @app.route('/show_expenses/<int:budgetID>')
@@ -44,10 +44,13 @@ def show_expenses(budgetID):
 def add_budget():
     name = request.form['name']
     maxSpending = request.form['maxSpending']
-    budget = Budget(name=name, maxSpending=maxSpending)
-    session.add(budget)
-    session.commit()
-    return jsonify({"data": {'id': budget.id, 'name': budget.name, 'maxSpending': budget.maxSpending}, "status": "success"})
+    try:
+        budget = Budget(name=name, maxSpending=maxSpending)
+        session.add(budget)
+        session.commit()
+        return jsonify({"data": {'id': budget.id, 'name': budget.name, 'maxSpending': budget.maxSpending}, "status": "success"})
+    except:
+        return jsonify({"data": {}, "status": "error"})
 
 
 @app.route('/addExpense/<int:budgetID>', methods=['POST'])

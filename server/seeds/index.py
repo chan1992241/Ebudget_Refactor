@@ -17,7 +17,7 @@ class Budget(Base):
     __tablename__ = 'budget'
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    maxSpending = Column(Integer, default=0)
+    max_spending = Column(Integer, default=0)
 
 
 @dataclass
@@ -40,11 +40,11 @@ isUncategorizedBudget = session.query(
     Budget).filter(Budget.name == 'Uncategorized')
 
 if (isUncategorizedBudget.count() == 0):
-    budget = Budget(name='Uncategorized', maxSpending=0)
+    budget = Budget(name='Uncategorized', max_spending=0)
     session.add(budget)
     session.commit()
 
 result = session.query(Budget).all()
 
 for row in result:
-    print(f'{row.id} {row.name} {row.maxSpending}')
+    print(f'{row.id} {row.name} {row.max_spending}')

@@ -10,8 +10,8 @@ import { UncategorizedBudgetCard } from './components/UncategorizedBudgetCard';
 interface budgetDetails {
   id: number;
   name: string;
-  totalExpense: number;
-  maxSpending: number;
+  total_expense?: number;
+  max_spending: number;
 }
 
 function App(): JSX.Element {
@@ -20,6 +20,8 @@ function App(): JSX.Element {
   const [showAddExpenseModal, setshowAddExpenseModal] = useState<boolean>(false);
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState<number | null>(null);
   const [budgets, setBudgets] = useState<[any]>();
+  const [totalBudgets, setTotalBudgets] = useState<number>(0);
+  const [totalExpenses, setTotalExpenses] = useState<number>(0);
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
@@ -28,12 +30,23 @@ function App(): JSX.Element {
         setBudgets(data.data);
         return Promise.resolve();
       } catch (err: any) {
-        console.log(err);
+        console.error(err);
         return Promise.resolve();
       }
     }
     fetchData();
   }, []);
+  useEffect(() => {
+    setTotalBudgets(0);
+    setTotalExpenses(0);
+    let totalBudgetsTemp = 0, totalExpensesTemp = 0;
+    budgets && budgets.forEach(budget => {
+      totalBudgetsTemp += budget.max_spending;
+      totalExpensesTemp += budget.total_expense;
+    });
+    setTotalBudgets(totalBudgetsTemp);
+    setTotalExpenses(totalExpensesTemp);
+  }, [budgets]);
   return (
     <>
       <Container className="my-4">
@@ -45,16 +58,14 @@ function App(): JSX.Element {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", alignItems: "flex-start" }}>
           {budgets && budgets.map((budget: budgetDetails) => {
             if (budget.name === "Uncategorized") {
-              return <UncategorizedBudgetCard key={budget.id} amount={budget.totalExpense} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
+              return <UncategorizedBudgetCard key={budget.id} amount={budget.total_expense || 0} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
             } else {
               return (
-                <BudgetCard key={budget.id} name={budget.name} amount={budget.totalExpense} hideButton={false} max={budget.maxSpending} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
+                <BudgetCard key={budget.id} name={budget.name} amount={budget.total_expense || 0} hideButton={false} max={budget.max_spending} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
               )
             }
           })}
-          <BudgetCard key={100} name={"Name 1"} amount={100} max={200} gray={true} hideButton={false} onAddExpenseClick={() => setShowAddBudgetModal(true)} onViewExpensesClick={() => setViewExpensesModalBudgetId(1)} />
-          <UncategorizedBudgetCard onViewExpensesClick={() => setViewExpensesModalBudgetId(1)} amount={100} />
-          <TotalBudgetCard />
+          <TotalBudgetCard amount={totalExpenses} max={totalBudgets} />
         </div>
       </Container>
       <AddBudgetModal show={showAddBudgetModal}

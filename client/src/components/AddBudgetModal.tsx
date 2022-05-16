@@ -1,4 +1,5 @@
-import React, { FC, useEffect, useRef } from 'react'
+import axios from 'axios';
+import React, { FC, useRef } from 'react'
 import { Modal, Form, Button } from "react-bootstrap";
 
 interface AddBudgetModalProps {
@@ -10,8 +11,14 @@ export const AddBudgetModal: FC<AddBudgetModalProps> = ({ show, handleClose }) =
     const nameRef = useRef<any>();
     const maxRef = useRef<any>();
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
-        event.preventDefault();
-        // useFetchAPI('http://127.0.0.1:5000/', "GET");
+        const bodyFormData = new FormData();
+        bodyFormData.append('name', nameRef.current.value);
+        bodyFormData.append('max_spending', maxRef.current.value);
+        try {
+            await axios.post('http://localhost:5000/addBudget/', bodyFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
+        } catch (err) {
+            console.error(err);
+        }
         handleClose();
     }
     return <Modal show={show} onHide={handleClose}>

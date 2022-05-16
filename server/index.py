@@ -2,7 +2,7 @@ from flask import Flask, redirect, url_for, request, jsonify
 from seeds.index import Budget, Expense
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, text
-from flask_cors import CORS
+from flask_cors import CORS, cross_origin
 from dotenv import load_dotenv
 import os
 # Connect to database
@@ -45,17 +45,18 @@ def show_expenses(budgetID):
         return jsonify({"data": [], "status": "error", "message": e})
 
 
-@app.route('/addBudget', methods=['POST'])
+@app.route('/addBudget/', methods=['POST'])
+@cross_origin()
 def add_budget():
     name = request.form['name']
-    max_spending = request.form['maxSpending']
+    max_spending = request.form['max_spending']
     try:
         budget = Budget(name=name, max_spending=max_spending)
         session.add(budget)
         session.commit()
-        return jsonify({"data": {'id': budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"})
+        return jsonify({"data": {'id': budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"}), 200
     except:
-        return jsonify({"data": {}, "status": "error"})
+        return jsonify({"data": {}, "status": "error"}), 400
 
 
 @app.route('/addExpense/<int:budgetID>', methods=['POST'])

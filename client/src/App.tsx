@@ -6,9 +6,9 @@ import { BudgetCard } from './components/BudgetCard';
 import { AddBudgetModal } from './components/AddBudgetModal';
 import { Button, Stack, Container } from "react-bootstrap"
 import { UncategorizedBudgetCard } from './components/UncategorizedBudgetCard';
-
+import { useBudgets } from './contexts/BudgetsContext';
 interface budgetDetails {
-  id: number;
+  budget_id: number;
   name: string;
   total_expense?: number;
   max_spending: number;
@@ -22,6 +22,7 @@ function App(): JSX.Element {
   const [budgets, setBudgets] = useState<[any]>();
   const [totalBudgets, setTotalBudgets] = useState<number>(0);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
+  const { isBudgetExpensesChanged, setIsBudgetExpensesChanged } = useBudgets();
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
@@ -35,7 +36,8 @@ function App(): JSX.Element {
       }
     }
     fetchData();
-  }, []);
+    setIsBudgetExpensesChanged(false);
+  }, [isBudgetExpensesChanged]);
   useEffect(() => {
     setTotalBudgets(0);
     setTotalExpenses(0);
@@ -58,10 +60,10 @@ function App(): JSX.Element {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", alignItems: "flex-start" }}>
           {budgets && budgets.map((budget: budgetDetails) => {
             if (budget.name === "Uncategorized") {
-              return <UncategorizedBudgetCard key={budget.id} amount={budget.total_expense || 0} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
+              return <UncategorizedBudgetCard key={budget.budget_id} amount={budget.total_expense || 0} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
             } else {
               return (
-                <BudgetCard key={budget.id} name={budget.name} amount={budget.total_expense || 0} hideButton={false} max={budget.max_spending} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.id)} />
+                <BudgetCard key={budget.budget_id} name={budget.name} amount={budget.total_expense || 0} hideButton={false} max={budget.max_spending} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
               )
             }
           })}

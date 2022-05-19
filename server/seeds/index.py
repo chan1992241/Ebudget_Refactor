@@ -2,6 +2,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from dataclasses import dataclass
+from sqlalchemy.dialects.postgresql import FLOAT
 # meta = MetaData()
 
 engine = create_engine(
@@ -17,7 +18,7 @@ class Budget(Base):
     __tablename__ = 'budget'
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    max_spending = Column(Integer, default=0)
+    max_spending = Column(FLOAT, default=0)
 
 
 @dataclass
@@ -25,7 +26,7 @@ class Expense(Base):
     __tablename__ = 'expense'
     id = Column(Integer, primary_key=True)
     name = Column(String)
-    amount = Column(Integer)
+    amount = Column(FLOAT)
     budget_id = Column(Integer, ForeignKey('budget.id'))
 
 

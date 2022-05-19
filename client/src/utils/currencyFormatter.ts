@@ -1,5 +1,6 @@
-export const currencyFormatter: Intl.NumberFormat = new Intl.NumberFormat(undefined, {
-    currency: "USD",
+export const currencyFormatter: Intl.NumberFormat = new Intl.NumberFormat("en-US", {
+    currency: "MYR",
     style: "currency",
-    minimumFractionDigits: 0,
+    currencySign: 'accounting',
+    currencyDisplay: 'narrowSymbol',
 })

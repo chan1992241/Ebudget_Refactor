@@ -4,6 +4,7 @@ import { BudgetCard } from './BudgetCard'
 
 interface UncategorizedBudgetCardProps {
     onViewExpensesClick: () => void;
+    onAddExpenseClick: () => void;
     amount: number;
 }
 

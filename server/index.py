@@ -81,15 +81,16 @@ def delete_budget(budgetID):
         expenses = session.query(Expense).filter(
             Expense.budget_id == budgetID).all()
         for expense in expenses:
+            # Change expense budget category to uncategorized
             expense.budget_id = 1
             session.add(expense)
             session.commit()
         budget = session.query(Budget).filter(Budget.id == budgetID).first()
         session.delete(budget)
         session.commit()
-        return jsonify({"data": {"id": budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"})
+        return jsonify({"data": {"id": budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"}), 200
     except:
-        return jsonify({"data": [], "status": "fail"})
+        return jsonify({"data": [], "status": "fail"}), 400
 
 
 @app.route('/deleteExpense/<int:expenseID>', methods=['DELETE'])

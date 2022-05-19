@@ -19,6 +19,7 @@ function App(): JSX.Element {
   const [showAddBudgetModal, setShowAddBudgetModal] = useState<boolean>(false);
   const [showAddExpenseModal, setshowAddExpenseModal] = useState<boolean>(false);
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState<number | null>(null);
+  const [addNewExpenseBudgetId, setAddNewExpenseBudgetId] = useState<number | null>(null);
   const [budgets, setBudgets] = useState<[any]>();
   const [totalBudgets, setTotalBudgets] = useState<number>(0);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
@@ -49,6 +50,10 @@ function App(): JSX.Element {
     setTotalBudgets(totalBudgetsTemp);
     setTotalExpenses(totalExpensesTemp);
   }, [budgets]);
+  function addNewExpenseModal(budgetId: number): void {
+    setAddNewExpenseBudgetId(budgetId);
+    setshowAddExpenseModal(true);
+  }
   return (
     <>
       <Container className="my-4">
@@ -60,10 +65,20 @@ function App(): JSX.Element {
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", alignItems: "flex-start" }}>
           {budgets && budgets.map((budget: budgetDetails) => {
             if (budget.name === "Uncategorized") {
-              return <UncategorizedBudgetCard key={budget.budget_id} amount={budget.total_expense || 0} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
+              return (<UncategorizedBudgetCard
+                key={budget.budget_id}
+                amount={budget.total_expense || 0}
+                onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)}
+                onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)} />)
             } else {
               return (
-                <BudgetCard key={budget.budget_id} name={budget.name} amount={budget.total_expense || 0} hideButton={false} max={budget.max_spending} onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
+                <BudgetCard
+                  onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)}
+                  key={budget.budget_id} name={budget.name}
+                  amount={budget.total_expense || 0}
+                  hideButton={false}
+                  max={budget.max_spending}
+                  onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
               )
             }
           })}
@@ -72,7 +87,7 @@ function App(): JSX.Element {
       </Container>
       <AddBudgetModal show={showAddBudgetModal}
         handleClose={() => setShowAddBudgetModal(false)} />
-      <AddExpenseModal show={showAddExpenseModal} handleClose={() => setshowAddExpenseModal(false)} defaulBudgetId={"1"} />
+      <AddExpenseModal show={showAddExpenseModal} handleClose={() => setshowAddExpenseModal(false)} defaulBudgetId={addNewExpenseBudgetId || 1} />
       <ViewExpensesModal budgetId={viewExpensesModalBudgetId} handleClose={() => setViewExpensesModalBudgetId(null)} />
     </>
   );

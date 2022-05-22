@@ -15,7 +15,6 @@ interface budgetDetails {
 }
 
 function App(): JSX.Element {
-  // const [showAddBudgetModal, setShowAddBudgetModal] = useState<boolean>(true);
   const [showAddBudgetModal, setShowAddBudgetModal] = useState<boolean>(false);
   const [showAddExpenseModal, setshowAddExpenseModal] = useState<boolean>(false);
   const [viewExpensesModalBudgetId, setViewExpensesModalBudgetId] = useState<number | null>(null);

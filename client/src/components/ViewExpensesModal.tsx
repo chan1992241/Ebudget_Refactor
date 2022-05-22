@@ -17,9 +17,6 @@ interface ExpenseDetails {
 }
 
 export const ViewExpensesModal: FC<ViewExpensesModalProps> = ({ budgetId, handleClose }) => {
-    // const { getBudgetExpenses, budgets, deleteBudget, deleteExpense } = useBudgets()
-    // const budget = UNCATEGORIZED_BUDGET_ID === budgetId ? { name: "Uncategorized", id: UNCATEGORIZED_BUDGET_ID } : budgets.find(budget => budget.id === budgetId)
-    // const expenses = getBudgetExpenses(budgetId)
     const { setIsBudgetExpensesChanged } = useBudgets();
     const [expenses, setExpenses] = useState<ExpenseDetails[]>([])
     const [isDeleteExpense, setIsDeleteExpense] = useState<boolean>(false);
@@ -66,7 +63,7 @@ export const ViewExpensesModal: FC<ViewExpensesModalProps> = ({ budgetId, handle
                         <div>
                             Expense - {budgetId}
                         </div>
-                        {budgetId == 1 ? null : <Button variant="outline-danger" onClick={() => budgetId && handleDeleteBudget(budgetId)}>Delete Budget</Button>}
+                        {budgetId === 1 ? null : <Button variant="outline-danger" onClick={() => budgetId && handleDeleteBudget(budgetId)}>Delete Budget</Button>}
                     </Stack>
                 </Modal.Title>
             </Modal.Header>

@@ -34,13 +34,13 @@ export const BudgetCard: FC<BudgetCardProps> = ({ name, amount, max, gray, onAdd
                 <Card.Title className="d-flex justify-content-between align-items-baseline fw-normal mb-3">
                     <div className="me-2">{name}</div>
                     <div className="d-flex align-items-baseline">{currencyFormatter.format(amount)}
-                        {max && (<span className="text-muted fs-6 ms-1">
+                        {max ? (<span className="text-muted fs-6 ms-1">
                             /{currencyFormatter.format(max)}
-                        </span>)}
+                        </span>) : null}
                     </div>
                 </Card.Title>
-                {max && <ProgressBar className="rounded-pill" variant={getProgressBarVariant(amount, max)}
-                    min={0} max={max} now={amount}></ProgressBar>}
+                {max ? <ProgressBar className="rounded-pill" variant={getProgressBarVariant(amount, max)}
+                    min={0} max={max} now={amount}></ProgressBar> : null}
                 {!hideButton && <Stack direction="horizontal" gap={"2" as any} className="mt-4">
                     <Button variant="outline-primary" className="ms-auto" onClick={onAddExpenseClick}>Add Expense</Button>
                     <Button variant="outline-secondary" onClick={onViewExpensesClick}>View Expenses</Button>

@@ -8,8 +8,10 @@ import os
 # Connect to database
 load_dotenv()
 try:
+    # engine = create_engine(
+    #     os.getenv("postgres_uri"), echo=True)
     engine = create_engine(
-        os.getenv("postgres_uri"), echo=True)
+        "postgresql+psycopg2://" + os.getenv("POSTGRES_USER") + ":" + os.getenv("POSTGRES_PASSWORD") + "@" + os.getenv("POSTGRES_HOST") + "/" + os.getenv("POSTGRES_DB"), echo=True)
     Session = sessionmaker(bind=engine)
     session = Session()
 except Exception as e:
@@ -17,6 +19,11 @@ except Exception as e:
 
 app = Flask(__name__)
 CORS(app)
+
+
+@app.route("/")
+def index():
+    return "Hello World!"
 
 
 @app.route('/show_budgets')
@@ -38,8 +45,6 @@ def show_expenses(budgetID):
     try:
         result = session.query(Expense).filter(
             Expense.budget_id == budgetID).all()
-        for row in result:
-            print(f'{row.id} {row.name} {row.amount}')
         return jsonify({"data": [{'id': row.id, 'name': row.name, 'amount': row.amount, 'budget_id': row.budget_id} for row in result], "status": "success"})
     except Exception as e:
         return jsonify({"data": [], "status": "error", "message": e})

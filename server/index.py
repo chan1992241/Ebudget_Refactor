@@ -8,11 +8,10 @@ import os
 # Connect to database
 load_dotenv()
 try:
-    # engine = create_engine(
-    #     os.getenv("postgres_uri"), echo=True)
     engine = create_engine(
         "postgresql+psycopg2://" + os.getenv("POSTGRES_USER") + ":" + os.getenv("POSTGRES_PASSWORD") + "@" + os.getenv("POSTGRES_HOST") + "/" + os.getenv("POSTGRES_DB"), echo=True)
     Session = sessionmaker(bind=engine)
+    print("Successfully connected to database")
     session = Session()
 except Exception as e:
     print(e)

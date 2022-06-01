@@ -3,10 +3,14 @@ from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from dataclasses import dataclass
 from sqlalchemy.dialects.postgresql import FLOAT
-# meta = MetaData()
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
+# meta = MetaData()
 engine = create_engine(
-    'postgresql+psycopg2://postgres:jinyeeU@localhost/ebudget', echo=True)
+    "postgresql+psycopg2://" + os.getenv("POSTGRES_USER") + ":" + os.getenv(
+        "POSTGRES_PASSWORD") + "@" + os.getenv("POSTGRES_HOST") + "/" + os.getenv("POSTGRES_DB"), echo=True)
 
 conn = engine.connect()
 

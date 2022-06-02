@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { FC, useRef } from 'react'
 import { Modal, Form, Button } from "react-bootstrap";
 import env from "react-dotenv";
+import { useBudgets } from '../contexts/BudgetsContext';
 
 interface AddBudgetModalProps {
     show: boolean;
@@ -11,12 +12,15 @@ interface AddBudgetModalProps {
 export const AddBudgetModal: FC<AddBudgetModalProps> = ({ show, handleClose }) => {
     const nameRef = useRef<any>();
     const maxRef = useRef<any>();
+    const { setIsBudgetExpensesChanged } = useBudgets();
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>): Promise<void> {
+        event.preventDefault();
         const bodyFormData = new FormData();
         bodyFormData.append('name', nameRef.current.value);
         bodyFormData.append('max_spending', maxRef.current.value);
         try {
             await axios.post(env.SERVER_HOST + '/addBudget/', bodyFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            setIsBudgetExpensesChanged(true);
         } catch (err) {
             console.error(err);
         }

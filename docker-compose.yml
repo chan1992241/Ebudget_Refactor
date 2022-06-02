@@ -1,5 +1,11 @@
 version: "3.8"
 services: 
+  react:
+    container_name: "react"
+    build: ./client
+    ports:
+      - 3000:3000
+    stdin_open: true
   flask:
     build: ./server
     container_name: flask

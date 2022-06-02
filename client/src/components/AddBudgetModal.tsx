@@ -1,6 +1,7 @@
 import axios from 'axios';
 import React, { FC, useRef } from 'react'
 import { Modal, Form, Button } from "react-bootstrap";
+import env from "react-dotenv";
 
 interface AddBudgetModalProps {
     show: boolean;
@@ -15,7 +16,7 @@ export const AddBudgetModal: FC<AddBudgetModalProps> = ({ show, handleClose }) =
         bodyFormData.append('name', nameRef.current.value);
         bodyFormData.append('max_spending', maxRef.current.value);
         try {
-            await axios.post('http://localhost:5000/addBudget/', bodyFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            await axios.post(env.SERVER_HOST + '/addBudget/', bodyFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
         } catch (err) {
             console.error(err);
         }

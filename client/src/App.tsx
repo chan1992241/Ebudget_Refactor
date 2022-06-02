@@ -7,6 +7,7 @@ import { AddBudgetModal } from './components/AddBudgetModal';
 import { Button, Stack, Container } from "react-bootstrap"
 import { UncategorizedBudgetCard } from './components/UncategorizedBudgetCard';
 import { useBudgets } from './contexts/BudgetsContext';
+import env from "react-dotenv";
 interface budgetDetails {
   budget_id: number;
   name: string;
@@ -26,7 +27,7 @@ function App(): JSX.Element {
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
-        const response = await fetch('http://localhost:5000/show_budgets');
+        const response = await fetch(env.SERVER_HOST + '/show_budgets');
         const data = await response.json();
         setBudgets(data.data);
         return Promise.resolve();

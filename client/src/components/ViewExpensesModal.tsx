@@ -3,6 +3,7 @@ import { currencyFormatter } from "../utils/currencyFormatter";
 import { FC, useEffect, useState } from "react";
 import axios from "axios";
 import { useBudgets } from "../contexts/BudgetsContext";
+import env from "react-dotenv";
 
 interface ViewExpensesModalProps {
     budgetId: number | null,
@@ -24,7 +25,7 @@ export const ViewExpensesModal: FC<ViewExpensesModalProps> = ({ budgetId, handle
         const fetchExpenses = async () => {
             try {
                 if (budgetId) {
-                    const response = await axios.get(`http://localhost:5000/show_expenses/${budgetId}`);
+                    const response = await axios.get(env.SERVER_HOST + `/show_expenses/${budgetId}`);
                     setExpenses(response.data.data);
                     return Promise.resolve();
                 }
@@ -37,7 +38,7 @@ export const ViewExpensesModal: FC<ViewExpensesModalProps> = ({ budgetId, handle
     }, [budgetId, isDeleteExpense])
     async function handleDeleteBudget(budgetId: number) {
         try {
-            const response = await axios.delete(`http://localhost:5000/deleteBudget/${budgetId}`)
+            const response = await axios.delete(env.SERVER_HOST + `/deleteBudget/${budgetId}`)
             setIsBudgetExpensesChanged(true);
             handleClose();
         } catch (err) {
@@ -47,7 +48,7 @@ export const ViewExpensesModal: FC<ViewExpensesModalProps> = ({ budgetId, handle
     async function handleDeleteExpense(expenseId: number) {
         setIsDeleteExpense(false);
         try {
-            await axios.delete(`http://localhost:5000/deleteExpense/${expenseId}`)
+            await axios.delete(env.SERVER_HOST + `/deleteExpense/${expenseId}`)
             setIsDeleteExpense(true);
             setIsBudgetExpensesChanged(true);
         } catch (err) {

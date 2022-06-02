@@ -2,6 +2,7 @@ import axios from 'axios';
 import React, { FC, useRef, useEffect, useState } from 'react'
 import { Modal, Form, Button } from "react-bootstrap";
 import { useBudgets } from '../contexts/BudgetsContext';
+import env from "react-dotenv";
 
 interface AddNewBudgetProps {
     show: boolean;
@@ -31,7 +32,7 @@ const AddExpenseModal: FC<AddNewBudgetProps> = ({ show, handleClose, defaulBudge
         newExpenseformData.append('name', description);
         newExpenseformData.append('amount', amount);
         try {
-            await axios.post(`http://localhost:5000/addExpense/${budgetId}`, newExpenseformData, { headers: { 'Content-Type': 'multipart/form-data' } });
+            await axios.post(env.SERVER_HOST + `/addExpense/${budgetId}`, newExpenseformData, { headers: { 'Content-Type': 'multipart/form-data' } });
             setIsBudgetExpensesChanged(true);
             handleClose();
         } catch (err) {
@@ -42,7 +43,7 @@ const AddExpenseModal: FC<AddNewBudgetProps> = ({ show, handleClose, defaulBudge
     useEffect(() => {
         const fetchData = async (): Promise<void> => {
             try {
-                const response = await fetch('http://localhost:5000/show_budgets');
+                const response = await fetch(env.SERVER_HOST + '/show_budgets');
                 const data = await response.json();
                 setBudgetDetails(data.data);
                 return Promise.resolve();

@@ -1,5 +1,6 @@
 import React, { useContext, useState } from "react";
 import useFetchAPI from "../hooks/useFetchAPI";
+import env from "react-dotenv";
 
 export const BudgetsContext = React.createContext<any>(null);
 
@@ -18,7 +19,7 @@ export const BudgetsProvider = ({ children }: props) => {
         PUT = 'PUT',
         DELETE = 'DELETE'
     }
-    const [budgets, ,] = useFetchAPI<any>('http://localhost:5000/show_budgets', options.GET);
+    const [budgets, ,] = useFetchAPI<any>(env.SERVER_HOST + '/show_budgets', options.GET);
     const [isBudgetExpensesChanged, setIsBudgetExpensesChanged] = useState<boolean>(false);
 
     return <BudgetsContext.Provider value={{

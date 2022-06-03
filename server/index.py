@@ -1,7 +1,7 @@
 import email
 from unicodedata import name
 from flask import Flask, redirect, url_for, request, jsonify, session
-from seeds.index import Budget, Expense
+from seeds.index import Budget, Expense, User
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, text
 from flask_cors import CORS, cross_origin
@@ -72,8 +72,19 @@ def authorize():
     resp = google.get('userinfo')
     user_info = resp.json()
     session['profile'] = user_info
-    # session['profile'] = user_info
-    return redirect('/show_budgets')
+    isUser = db_session.query(User).filter(
+        User.email == user_info['email'])
+    # return redirect('/')
+    if (isUser.count() == 0):
+        user = User(name=user_info['name'], email=user_info['email'])
+        db_session.add(user)
+        db_session.commit()
+        budget = Budget(name='Uncategorized', max_spending=0, user_id=user.id)
+        db_session.add(budget)
+        db_session.commit()
+        return redirect(f'/show_budgets/{user.id}')
+    else:
+        return redirect(f'/show_budgets/{isUser[0].id}')
 
 
 @app.route('/logout')
@@ -83,19 +94,19 @@ def logout():
     return redirect('/')
 
 
-@ app.route('/show_budgets')
+@app.route('/show_budgets/<int:userID>')
 @login_required
-def show_budgets():
-    sqlStatement = text(
-        """
-        SELECT b.name, b.max_spending, b.id, SUM(e.amount)
+def show_budgets(userID):
+    sqlStatement = text(f"""
+        SELECT b.name, b.max_spending, b.id, SUM(e.amount), b.user_id
         FROM Expense e
         RIGHT JOIN Budget b ON e.budget_id=b.id
+        WHERE b.user_id={userID}
         GROUP BY b.id;
         """)
     result = db_session.execute(
         sqlStatement)
-    return jsonify({"data": [{'budget_id': row.id, 'name': row.name, "max_spending": row.max_spending, "total_expense": row.sum} for row in result], "status": "success"})
+    return jsonify({"data": [{'budget_id': row.id, 'name': row.name, "max_spending": row.max_spending, "total_expense": row.sum, "user_id": row.user_id} for row in result], "status": "success"})
 
 
 @ app.route('/show_expenses/<int:budgetID>')
@@ -109,17 +120,17 @@ def show_expenses(budgetID):
         return jsonify({"data": [], "status": "error", "message": e})
 
 
-@ app.route('/addBudget/', methods=['POST'])
-@ cross_origin()
+@ app.route('/addBudget/<int:userID>', methods=['POST'])
 @login_required
-def add_budget():
+@ cross_origin()
+def add_budget(userID):
     name = request.form['name']
     max_spending = request.form['max_spending']
     try:
-        budget = Budget(name=name, max_spending=max_spending)
+        budget = Budget(name=name, max_spending=max_spending, user_id=userID)
         db_session.add(budget)
         db_session.commit()
-        return jsonify({"data": {'id': budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"}), 200
+        return jsonify({"data": {'id': budget.id, 'name': budget.name, 'max_spending': budget.max_spending, 'user_id': userID}, "status": "success"}), 200
     except:
         return jsonify({"data": {}, "status": "error"}), 400
 

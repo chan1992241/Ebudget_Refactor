@@ -1,9 +1,14 @@
-from flask import Flask, redirect, url_for, request, jsonify
+import email
+from unicodedata import name
+from flask import Flask, redirect, url_for, request, jsonify, session
 from seeds.index import Budget, Expense
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import create_engine, text
 from flask_cors import CORS, cross_origin
+from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
+from functools import wraps
+
 import os
 # Connect to database
 load_dotenv()
@@ -12,98 +17,157 @@ try:
         "postgresql+psycopg2://" + os.getenv("POSTGRES_USER") + ":" + os.getenv("POSTGRES_PASSWORD") + "@" + os.getenv("POSTGRES_HOST") + "/" + os.getenv("POSTGRES_DB"), echo=True)
     Session = sessionmaker(bind=engine)
     print("Successfully connected to database")
-    session = Session()
+    db_session = Session()
 except Exception as e:
     print(e)
 
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY")
 CORS(app)
+# oauth config
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    client_kwargs={'scope': 'openid email profile'},
+    userinfo_endpoint='https://openidconnect.googleapis.com/v1/userinfo',
+    jwks_uri="https://www.googleapis.com/oauth2/v3/certs",
+)
 
 
-@app.route("/")
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        user = dict(session).get('profile', None)
+        if user:
+            return f(*args, **kwargs)
+        return redirect('/login')
+    return decorated_function
+
+
+@ app.route("/")
+@login_required
 def index():
-    return "Hello World!"
+    email = dict(session)['profile']['email']
+    return f'Hello, {email}'
 
 
-@app.route('/show_budgets')
+@ app.route('/login')
+def login():
+    google = oauth.create_client('google')
+    redirect_uri = url_for('authorize', _external=True)
+    return google.authorize_redirect(redirect_uri)
+
+
+@ app.route('/authorize')
+def authorize():
+    google = oauth.create_client('google')
+    token = google.authorize_access_token()
+    resp = google.get('userinfo')
+    user_info = resp.json()
+    session['profile'] = user_info
+    # session['profile'] = user_info
+    return redirect('/show_budgets')
+
+
+@app.route('/logout')
+def logout():
+    for key in list(session.keys()):
+        session.pop(key)
+    return redirect('/')
+
+
+@ app.route('/show_budgets')
+@login_required
 def show_budgets():
     sqlStatement = text(
         """
-        SELECT b.name, b.max_spending, b.id, SUM(e.amount) 
-        FROM Expense e 
-        RIGHT JOIN Budget b ON e.budget_id=b.id 
+        SELECT b.name, b.max_spending, b.id, SUM(e.amount)
+        FROM Expense e
+        RIGHT JOIN Budget b ON e.budget_id=b.id
         GROUP BY b.id;
         """)
-    result = session.execute(
+    result = db_session.execute(
         sqlStatement)
     return jsonify({"data": [{'budget_id': row.id, 'name': row.name, "max_spending": row.max_spending, "total_expense": row.sum} for row in result], "status": "success"})
 
 
-@app.route('/show_expenses/<int:budgetID>')
+@ app.route('/show_expenses/<int:budgetID>')
+@login_required
 def show_expenses(budgetID):
     try:
-        result = session.query(Expense).filter(
+        result = db_session.query(Expense).filter(
             Expense.budget_id == budgetID).all()
         return jsonify({"data": [{'id': row.id, 'name': row.name, 'amount': row.amount, 'budget_id': row.budget_id} for row in result], "status": "success"})
     except Exception as e:
         return jsonify({"data": [], "status": "error", "message": e})
 
 
-@app.route('/addBudget/', methods=['POST'])
-@cross_origin()
+@ app.route('/addBudget/', methods=['POST'])
+@ cross_origin()
+@login_required
 def add_budget():
     name = request.form['name']
     max_spending = request.form['max_spending']
     try:
         budget = Budget(name=name, max_spending=max_spending)
-        session.add(budget)
-        session.commit()
+        db_session.add(budget)
+        db_session.commit()
         return jsonify({"data": {'id': budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"}), 200
     except:
         return jsonify({"data": {}, "status": "error"}), 400
 
 
-@app.route('/addExpense/<int:budgetID>', methods=['POST'])
+@ app.route('/addExpense/<int:budgetID>', methods=['POST'])
+@login_required
 def add_expense(budgetID):
     name = request.form['name']
     amount = request.form['amount']
-    budget = session.query(Budget).filter(Budget.id == budgetID)
+    budget = db_session.query(Budget).filter(Budget.id == budgetID)
     if (budget.count() != 0):
         try:
             expense = Expense(name=name, amount=amount, budget_id=budgetID)
-            session.add(expense)
-            session.commit()
+            db_session.add(expense)
+            db_session.commit()
             return jsonify({"data": {"id": expense.id, 'name': expense.name, 'amount': expense.amount, 'budget_id': expense.budget_id}, "status": "success"})
         except:
             return jsonify({"data": [], "status": "fail"})
     return jsonify({"data": [], "status": "Budget Not Found"})
 
 
-@app.route('/deleteBudget/<int:budgetID>', methods=['DELETE'])
+@ app.route('/deleteBudget/<int:budgetID>', methods=['DELETE'])
+@login_required
 def delete_budget(budgetID):
     try:
-        expenses = session.query(Expense).filter(
+        expenses = db_session.query(Expense).filter(
             Expense.budget_id == budgetID).all()
         for expense in expenses:
             # Change expense budget category to uncategorized
             expense.budget_id = 1
-            session.add(expense)
-            session.commit()
-        budget = session.query(Budget).filter(Budget.id == budgetID).first()
-        session.delete(budget)
-        session.commit()
+            db_session.add(expense)
+            db_session.commit()
+        budget = db_session.query(Budget).filter(Budget.id == budgetID).first()
+        db_session.delete(budget)
+        db_session.commit()
         return jsonify({"data": {"id": budget.id, 'name': budget.name, 'max_spending': budget.max_spending}, "status": "success"}), 200
     except:
         return jsonify({"data": [], "status": "fail"}), 400
 
 
-@app.route('/deleteExpense/<int:expenseID>', methods=['DELETE'])
+@ app.route('/deleteExpense/<int:expenseID>', methods=['DELETE'])
+@login_required
 def delete_expense(expenseID):
     try:
-        expense = session.query(Expense).filter(
+        expense = db_session.query(Expense).filter(
             Expense.id == expenseID).first()
-        session.delete(expense)
-        session.commit()
+        db_session.delete(expense)
+        db_session.commit()
         return jsonify({"data": {"id": expense.id, 'name': expense.name, 'amount': expense.amount, 'budget_id': expense.budget_id}, "status": "success"})
     except:
         return jsonify({"data": [], "status": "fail"})

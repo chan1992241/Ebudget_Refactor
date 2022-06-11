@@ -8,6 +8,7 @@ import { Button, Stack, Container } from "react-bootstrap"
 import { UncategorizedBudgetCard } from './components/UncategorizedBudgetCard';
 import { useBudgets } from './contexts/BudgetsContext';
 import env from "react-dotenv";
+import jwt_decode from 'jwt-decode';
 interface budgetDetails {
   budget_id: number;
   name: string;
@@ -24,6 +25,36 @@ function App(): JSX.Element {
   const [totalBudgets, setTotalBudgets] = useState<number>(0);
   const [totalExpenses, setTotalExpenses] = useState<number>(0);
   const { isBudgetExpensesChanged, setIsBudgetExpensesChanged } = useBudgets();
+  const [user, setUser] = useState<any>({});
+  const [isUserChanged, setIsUserChanged] = useState<boolean>(false);
+  useEffect(() => {
+    (document.getElementById("content") as HTMLElement).hidden = true;
+    google.accounts.id.initialize({
+      client_id: env.GOOGLE_CLIENT_ID,
+      callback: (response) => {
+        let userDetail = jwt_decode(response.credential);
+        console.log(userDetail);
+        setUser(userDetail);
+        (document.getElementById("signInButton") as HTMLElement).hidden = true;
+        (document.getElementById("content") as HTMLElement).hidden = false;
+      }
+    });
+    google.accounts.id.renderButton(
+      document.getElementById("signInButton") as HTMLElement,
+      {
+        theme: "outline", size: "large",
+        type: 'standard'
+      }  // customization attributes
+    );
+    setIsUserChanged(false);
+    google.accounts.id.prompt(); // also display the One Tap dialog
+  }, [isUserChanged])
+  function handleSignOut() {
+    setUser({});
+    setIsUserChanged(true);
+    (document.getElementById("signInButton") as HTMLElement).hidden = false;
+    (document.getElementById("content") as HTMLElement).hidden = true;
+  }
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
       try {
@@ -57,33 +88,37 @@ function App(): JSX.Element {
   return (
     <>
       <Container className="my-4">
-        <Stack direction='horizontal' gap={"2" as any} className='mb-4'>
-          <h1 className='me-auto'>Budgets</h1>
-          <Button variant="primary" onClick={() => setShowAddBudgetModal(true)}>Add Budget</Button>
-          <Button variant='outline-primary' onClick={() => setshowAddExpenseModal(true)}>Add Expense</Button>
-        </Stack>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", alignItems: "flex-start" }}>
-          {budgets && budgets.map((budget: budgetDetails) => {
-            if (budget.name === "Uncategorized") {
-              return (<UncategorizedBudgetCard
-                key={budget.budget_id}
-                amount={budget.total_expense || 0}
-                onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)}
-                onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)} />)
-            } else {
-              return (
-                <BudgetCard
-                  onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)}
-                  key={budget.budget_id} name={budget.name}
+        <div id='signInButton' style={{ display: "flex", justifyContent: "center" }}></div>
+        {user && <div id='content'>
+          <Stack direction='horizontal' gap={"2" as any} className='mb-4'>
+            <h1 className='me-auto'>{user.name}'s Budgets</h1>
+            <Button variant="primary" onClick={() => setShowAddBudgetModal(true)}>Add Budget</Button>
+            <Button variant='outline-primary' onClick={() => setshowAddExpenseModal(true)}>Add Expense</Button>
+            {user && <Button variant='outline-primary' onClick={(e) => handleSignOut()}>Sign Out</Button>}
+          </Stack>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", gap: "1rem", alignItems: "flex-start" }}>
+            {budgets && budgets.map((budget: budgetDetails) => {
+              if (budget.name === "Uncategorized") {
+                return (<UncategorizedBudgetCard
+                  key={budget.budget_id}
                   amount={budget.total_expense || 0}
-                  hideButton={false}
-                  max={budget.max_spending}
-                  onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
-              )
-            }
-          })}
-          <TotalBudgetCard amount={totalExpenses} max={totalBudgets} />
-        </div>
+                  onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)}
+                  onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)} />)
+              } else {
+                return (
+                  <BudgetCard
+                    onAddExpenseClick={() => addNewExpenseModal(budget.budget_id)}
+                    key={budget.budget_id} name={budget.name}
+                    amount={budget.total_expense || 0}
+                    hideButton={false}
+                    max={budget.max_spending}
+                    onViewExpensesClick={() => setViewExpensesModalBudgetId(budget.budget_id)} />
+                )
+              }
+            })}
+            <TotalBudgetCard amount={totalExpenses} max={totalBudgets} />
+          </div>
+        </div>}
       </Container>
       <AddBudgetModal show={showAddBudgetModal}
         handleClose={() => setShowAddBudgetModal(false)} />

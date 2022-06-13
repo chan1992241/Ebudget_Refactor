@@ -1,5 +1,6 @@
+from ast import Str
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Column, Integer, String, ForeignKey, create_engine
+from sqlalchemy import Column, Integer, String, ForeignKey, create_engine, BigInteger
 from sqlalchemy.ext.declarative import declarative_base
 from dataclasses import dataclass
 from sqlalchemy.dialects.postgresql import FLOAT
@@ -19,7 +20,7 @@ Base = declarative_base()
 
 class User(Base):
     __tablename__ = 'users'
-    id = Column(Integer, primary_key=True)
+    id = Column(String, primary_key=True)
     name = Column(String)
     email = Column(String)
 
@@ -30,7 +31,7 @@ class Budget(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String)
     max_spending = Column(FLOAT, default=0)
-    user_id = Column(Integer, ForeignKey('users.id'))
+    user_id = Column(String, ForeignKey('users.id'))
 
 
 @dataclass

@@ -9,6 +9,7 @@ import { UncategorizedBudgetCard } from './components/UncategorizedBudgetCard';
 import { useBudgets } from './contexts/BudgetsContext';
 import env from "react-dotenv";
 import jwt_decode from 'jwt-decode';
+import axios from 'axios';
 interface budgetDetails {
   budget_id: number;
   name: string;
@@ -31,10 +32,12 @@ function App(): JSX.Element {
     (document.getElementById("content") as HTMLElement).hidden = true;
     google.accounts.id.initialize({
       client_id: env.GOOGLE_CLIENT_ID,
-      callback: (response) => {
-        let userDetail = jwt_decode(response.credential);
-        console.log(userDetail);
+      callback: async (response) => {
+        let userDetail: Object = jwt_decode(response.credential);
+        const bodyFormData = new FormData()
         setUser(userDetail);
+        bodyFormData.append("idtoken", response.credential.toString());
+        await axios.post(env.SERVER_HOST + '/login', bodyFormData, { headers: { 'Content-Type': 'multipart/form-data' } });
         (document.getElementById("signInButton") as HTMLElement).hidden = true;
         (document.getElementById("content") as HTMLElement).hidden = false;
       }

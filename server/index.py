@@ -1,3 +1,4 @@
+from crypt import methods
 import email
 from unicodedata import name
 from flask import Flask, redirect, url_for, request, jsonify, session
@@ -8,6 +9,8 @@ from flask_cors import CORS, cross_origin
 from authlib.integrations.flask_client import OAuth
 from dotenv import load_dotenv
 from functools import wraps
+from google.oauth2 import id_token
+from google.auth.transport import requests
 
 import os
 # Connect to database
@@ -58,11 +61,48 @@ def index():
     return f'Hello, {email}'
 
 
-@ app.route('/login')
+@app.route("/receivedToken", methods=['POST'])
+def receivedToken():
+    try:
+        token = request.form['idtoken']
+        idinfo = id_token.verify_oauth2_token(
+            token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+        print(idinfo)
+        return jsonify({"userid": "userid"})
+    except ValueError:
+        return jsonify({'error': 'Invalid token'})
+
+
+@ app.route('/login', methods=['GET', 'POST'])
 def login():
-    google = oauth.create_client('google')
-    redirect_uri = url_for('authorize', _external=True)
-    return google.authorize_redirect(redirect_uri)
+    if request.method == 'POST':
+        try:
+            token = request.form['idtoken']
+            idinfo = id_token.verify_oauth2_token(
+                token, requests.Request(), os.getenv("GOOGLE_CLIENT_ID"))
+            userid = idinfo['sub']
+            name = idinfo['name']
+            email = idinfo['email']
+            print(type(userid))
+            isUser = db_session.query(User).filter(
+                User.id == (""+userid))
+            if (isUser.count() == 0):
+                user = User(id=userid, name=name, email=email)
+                db_session.add(user)
+                db_session.commit()
+                budget = Budget(name='Uncategorized',
+                                max_spending=0, user_id=user.id)
+                db_session.add(budget)
+                db_session.commit()
+                return {'status': 'successful login'}
+            else:
+                return {'status': 'successful login'}
+        except ValueError:
+            return jsonify({'error': 'Invalid token'}), 404
+    else:
+        google = oauth.create_client('google')
+        redirect_uri = url_for('authorize', _external=True)
+        return google.authorize_redirect(redirect_uri)
 
 
 @ app.route('/authorize')
